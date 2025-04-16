@@ -1,9 +1,12 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { RoomCard } from "@/components/room-card"
+import { RoomSearch } from "@/components/room-search"
 import { Button } from "@/components/ui/button"
-import { PlusCircle, Sparkles, Waves, Headphones, Moon } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { PlusCircle, Search, Sparkles, Waves, Headphones, Moon } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { useSpring, animated } from "react-spring"
@@ -23,7 +26,9 @@ interface Room {
 }
 
 export default function Home() {
-  const liveRooms: Room[] = [
+  const [searchQuery, setSearchQuery] = useState('')
+  
+  const allRooms: Room[] = [
     {
       title: "Morning Meditation Thoughts",
       participants: 24,
@@ -84,7 +89,12 @@ export default function Home() {
       startTime: "9:30 PM",
     }
   ]
-  const glowAnimation = useSpring({
+
+  const filteredRooms = allRooms.filter(room =>
+    room.title.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const springProps = useSpring({
     from: { opacity: 0.5, scale: 0.95 },
     to: async (next) => {
       while (true) {
@@ -108,11 +118,12 @@ export default function Home() {
         transition={{ duration: 0.8 }}
         className="container max-w-5xl mx-auto px-4 py-12 relative">
 
-        <header className="flex items-center justify-between mb-16">
+        <header className="space-y-8 mb-16">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
+            className="flex items-center justify-between"
           >
             <div className="relative">
               <div className="absolute -inset-1 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 opacity-50 blur-xl animate-glow" />
@@ -121,13 +132,6 @@ export default function Home() {
                 <Sparkles className="h-6 w-6 text-blue-400" />
               </div>
             </div>
-            <p className="text-sm text-neutral-400 mt-3 tracking-wide">Mindful conversations in the digital realm</p>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-          >
             <Link href="/create-room">
               <Button 
                 variant="default" 
@@ -137,6 +141,22 @@ export default function Home() {
                 <span className="text-base">Create Space</span>
               </Button>
             </Link>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="relative max-w-md mx-auto"
+          >
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search rooms by title..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 bg-background/50 border-neutral-800 w-full"
+            />
           </motion.div>
         </header>
 
@@ -153,7 +173,7 @@ export default function Home() {
             <h2 className="text-xl font-medium text-white">Live Spaces</h2>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
-            {liveRooms.map((room: Room, index: number) => (
+            {(searchQuery ? filteredRooms : allRooms).map((room: Room, index: number) => (
               <RoomCard
                 key={index}
                 title={room.title}
@@ -161,6 +181,7 @@ export default function Home() {
                 speakers={room.speakers}
                 soundscape={room.soundscape}
                 isActive={room.isActive}
+                startTime={room.startTime}
               />
             ))}
           </div>
@@ -170,6 +191,7 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
+          className="mb-12"
         >
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
@@ -189,7 +211,6 @@ export default function Home() {
                 startTime={room.startTime}
               />
             ))}
-
           </div>
         </motion.section>
       </motion.main>
